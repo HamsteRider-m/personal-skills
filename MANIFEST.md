@@ -94,11 +94,9 @@
 - **Phase**: Phase 4
 
 ### obsidian-assistant
-- **Target Path**: `skills/productivity/obsidian-assistant/`
-- **Status**: `migration-pending`
-- **Source**: obsidian-best-pract (需改名)
-- **Notes**: 标记 needs-refresh，后续单独重做
-- **Phase**: Phase 4
+- **Path**: `skills/productivity/obsidian-assistant/`
+- **Status**: `needs-refresh`
+- **Notes**: 已在库中，需后续更新以贴合当前 Obsidian CLI
 
 ### codex-agent
 - **Target Path**: `skills/core/codex-agent/`

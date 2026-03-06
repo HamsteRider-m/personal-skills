@@ -56,10 +56,15 @@ content-bridge (router)
 
 ## 待办事项
 
-1. **实现摄取 skills 的具体逻辑**（当前只有骨架）
-2. **迁移 ultimate-search**（需要源码位置）
-3. **完善 obsidian-assistant**（需要源码位置）
-4. **设置自动化监控 cron**（可选）
+1. ~~实现摄取 skills 的具体逻辑~~（✅ 已完成：web-reader 可用，其他 3 个占位符）
+2. **迁移 ultimate-search**（需要从 GitHub fork 克隆）
+3. ~~完善 obsidian-assistant~~（✅ 已在库中，标记 needs-refresh）
+
+## 下一步
+
+- 克隆 ultimate-search fork 到 monorepo
+- 完善其他 3 个提取器的实现（weixin/youtube/document）
+- 测试端到端工作流
 
 ## 仓库状态
 
