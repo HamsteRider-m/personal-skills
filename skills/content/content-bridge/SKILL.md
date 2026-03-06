@@ -7,7 +7,7 @@ homepage: https://github.com/HamsteRider-m/personal-skills
 
 # Content Bridge - 通用内容摄取路由层
 
-自动从多种来源获取内容，上传到 NotebookLM，并根据自然语言指令生成播客、PPT、思维导图等多种格式。
+智能路由层，根据 URL 类型自动调用对应的内容摄取 skill，返回标准化内容。
 
 ## 定位与职责
 
@@ -36,11 +36,11 @@ content-bridge (路由判断)
 
 | 内容源 | 摄取 Skill | 状态 |
 |--------|-----------|------|
-| 微信公众号 | `weixin-extractor` | 计划中 (Phase 2) |
+| 微信公众号 | `weixin-extractor` | ✅ 已创建 |
 | B站视频 | `bilibili-subtitle` | ✅ 已存在 |
-| YouTube | `youtube-transcript` | 计划中 (Phase 2) |
-| 通用网页 | `web-reader` | 计划中 (Phase 2) |
-| PDF/DOCX | `document-parser` | 计划中 (Phase 2) |
+| YouTube | `youtube-transcript` | ✅ 已创建 |
+| 通用网页 | `web-reader` | ✅ 已创建 |
+| PDF/DOCX | `document-parser` | ✅ 已创建 |
 
 ## 支持的内容源
 
