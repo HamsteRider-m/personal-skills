@@ -1,0 +1,688 @@
+---
+name: anything-to-notebooklm
+description: 多源内容到NotebookLM处理器。当用户提供微信公众号链接(mp.weixin.qq.com)、YouTube链接、网页URL、本地文件路径(PDF/EPUB/DOCX/PPTX/MD等)或搜索关键词，并希望上传到NotebookLM或生成播客/PPT/思维导图等内容时触发。
+user-invocable: true
+homepage: https://github.com/joeseesun/anything-to-notebooklm
+---
+
+# 多源内容 → NotebookLM 智能处理器
+
+自动从多种来源获取内容，上传到 NotebookLM，并根据自然语言指令生成播客、PPT、思维导图等多种格式。
+
+## 定位与入口策略（重要）
+
+- 默认入口：对外优先使用 `anything-to-notebooklm`，适合“给素材/链接/关键词，直接产出内容”的自然语言请求。
+- 边界分工：本 Skill 负责内容采集、转换、清洗、意图路由；NotebookLM 侧的创建/上传/生成/等待/下载全部委托给 `notebooklm` Skill。
+- 高级直连：当用户明确要求 CLI 细节、JSON 输出、并行控制、research/fulltext/language 等高级能力时，直接切换到 `notebooklm` Skill。
+- 维护原则：本 Skill 不重复维护 NotebookLM 的完整命令教学，避免与上游 `notebooklm` Skill 漂移。
+
+## Quick Reference
+
+| 任务 | 执行方式 |
+|------|----------|
+| 抓取微信文章 | 本 Skill 调用 MCP `read_weixin_article` |
+| 提取 B 站字幕 | 本 Skill 调用 `bilibili-subtitle` |
+| 转换文档/OCR/转录 | 本 Skill 调用 `markitdown` |
+| 创建 notebook / 上传 source | 委托 `notebooklm` Skill |
+| 生成 audio/video/slide/report/mind-map 等 | 委托 `notebooklm` Skill |
+| 等待任务与下载产物 | 委托 `notebooklm` Skill |
+| JSON/并行/research/fulltext/language | 直接使用 `notebooklm` Skill（高级模式） |
+
+## 支持的内容源
+
+### 1. 微信公众号文章
+通过 MCP 服务器自动抓取微信公众号文章内容（绕过反爬虫）
+
+### 2. 任意网页链接
+支持任何公开可访问的网页（新闻、博客、文档等）
+
+### 3. YouTube 视频
+自动提取 YouTube 视频的字幕和元数据
+
+### 4. Office 文档
+- **Word (DOCX)** - 保留表格和格式
+- **PowerPoint (PPTX)** - 提取幻灯片和备注
+- **Excel (XLSX)** - 表格数据
+
+### 5. 电子书与文档
+- **PDF** - 全文提取
+- **EPUB** - 电子书全文提取
+- **Markdown (.md)** - 原生支持
+
+### 6. 图片与扫描件
+- **Images** (JPEG, PNG, GIF, WebP) - OCR 识别文字
+- 扫描的 PDF 文档 - OCR 提取文字
+
+### 7. 音频文件
+- **Audio** (WAV, MP3) - 语音转文字
+
+### 8. 结构化数据
+- **CSV** - 逗号分隔数据
+- **JSON** - JSON 数据
+- **XML** - XML 文档
+
+### 9. 压缩包
+- **ZIP** - 自动解压并处理所有支持的文件
+
+### 10. 纯文本
+直接输入或粘贴的文本内容
+
+### 11. 搜索关键词
+通过 Web Search 搜索关键词，汇总多个来源的信息
+
+### 12. Bilibili 视频
+通过 bilibili-subtitle 工具提取字幕或转录音频，生成文字稿
+
+## 前置条件
+
+### 1. 安装 wexin-read-mcp
+
+MCP 服务器已安装在：`~/.claude/skills/anything-to-notebooklm/wexin-read-mcp/`
+
+**配置 MCP**（需要手动添加到 Claude 配置文件）：
+
+**macOS**: 编辑 `~/.claude/config.json`
+
+```json
+{
+  "primaryApiKey": "any",
+  "mcpServers": {
+    "weixin-reader": {
+      "command": "python",
+      "args": [
+        "/Users/joe/.claude/skills/anything-to-notebooklm/wexin-read-mcp/src/server.py"
+      ]
+    }
+  }
+}
+```
+
+**配置后需要重启 Claude Code。**
+
+### 2. NotebookLM 认证
+
+首次使用前，委托 `notebooklm` Skill 执行认证流程：
+
+1. 运行认证检查（auth check）
+2. 如未登录或已过期，执行登录（login）
+3. 返回认证状态给本 Skill，确认后再继续上传/生成
+
+## 触发方式
+
+### 微信公众号文章
+- `/anything-to-notebooklm [微信文章链接]`
+- "把这篇微信文章传到NotebookLM"
+- "把这篇微信文章生成播客"
+
+### 网页链接
+- "把这个网页做成播客 [URL]"
+- "这篇文章帮我做成PPT [URL]"
+- "帮我分析这个网页 [URL]"
+
+### YouTube 视频
+- "把这个YouTube视频做成播客 [YouTube URL]"
+- "这个视频帮我生成思维导图 [YouTube URL]"
+
+### Bilibili 视频
+- "把这个B站视频做成播客 [Bilibili URL]"
+- "这个B站视频帮我生成PPT [BV号]"
+
+### 本地文件
+- "把这个PDF上传到NotebookLM /path/to/file.pdf"
+- "这个Markdown文件生成PPT /path/to/file.md"
+- "这个EPUB电子书生成播客 /path/to/book.epub"
+- "把这个Word文档做成思维导图 /path/to/doc.docx"
+- "这个PowerPoint生成Quiz /path/to/slides.pptx"
+- "把这个扫描PDF做成报告 /path/to/scan.pdf"（自动OCR）
+
+### 搜索关键词
+- "搜索 'AI发展趋势' 并生成报告"
+- "搜索关于'量子计算'的资料做成播客"
+
+### 混合使用
+- "把这篇文章、这个视频和这个PDF一起上传，生成一份报告"
+
+## 自然语言 → 委托动作映射
+
+| 用户说的话 | 识别意图 | 委托动作（由 `notebooklm` Skill 执行） |
+|-----------|---------|--------------------------------------|
+| "生成播客" / "做成音频" / "转成语音" | audio | generate-audio |
+| "做成PPT" / "生成幻灯片" / "做个演示" | slide-deck | generate-slide-deck |
+| "画个思维导图" / "生成脑图" / "做个导图" | mind-map | generate-mind-map |
+| "生成Quiz" / "出题" / "做个测验" | quiz | generate-quiz |
+| "做个视频" / "生成视频" | video | generate-video |
+| "生成报告" / "写个总结" / "整理成文档" | report | generate-report |
+| "做个信息图" / "可视化" | infographic | generate-infographic |
+| "生成数据表" / "做个表格" | data-table | generate-data-table |
+| "做成闪卡" / "生成记忆卡片" | flashcards | generate-flashcards |
+
+**如果没有明确指令**，默认只上传不生成任何内容，等待用户后续指令。
+
+## Progress Updates
+
+执行过程中提供清晰的状态更新：
+
+```
+⏳ 识别内容源类型...
+✅ 检测到微信公众号文章
+⏳ 抓取文章内容...
+✅ 文章抓取成功：《深度学习的未来趋势》
+⏳ 保存为临时文件...
+✅ 已保存：/tmp/weixin_深度学习_1706234567.txt
+⏳ 创建 NotebookLM 笔记本...
+✅ 笔记本已创建：ID abc-123-def
+⏳ 上传文件到笔记本...
+✅ 上传完成，等待处理...
+✅ 处理完成！
+⏳ 生成播客...
+✅ 播客生成完成！
+⏳ 下载文件...
+✅ Done!
+```
+
+## Output Summary
+
+任务完成后，按以下格式输出：
+
+**仅上传（无生成）**：
+```
+✅ 内容已上传到 NotebookLM！
+
+📓 笔记本：[标题]
+   ID: abc-123-def
+
+📄 来源：filename.txt
+   ID: source-xyz-789
+
+💡 后续操作：
+   - 默认继续使用本 Skill：直接说“基于这个 notebook 生成播客/PPT/Quiz”
+   - 高级模式：切换 `notebooklm` Skill，对该 notebook 进行精细控制
+```
+
+**上传并生成**：
+```
+✅ [内容类型]已转换为[输出格式]！
+
+📄 来源：[标题/文件名]
+👤 作者：[作者]（如有）
+📅 日期：[日期]（如有）
+
+🎙️ [输出格式]已生成：
+📁 文件：/tmp/output_file.mp3
+⏱️ 时长/页数：约 X 分钟/页
+📊 大小：X MB
+```
+
+## 工作流程
+
+### Step 1: 识别内容源类型
+
+Claude 自动识别输入类型：
+
+| 输入特征 | 识别为 | 处理方式 |
+|---------|-------|---------|
+| `https://mp.weixin.qq.com/s/` | 微信公众号 | MCP 工具抓取 |
+| `https://youtube.com/...` 或 `https://youtu.be/...` | YouTube | 直接传递给 NotebookLM |
+| `https://bilibili.com/...` 或 `BV1xxx` | Bilibili 视频 | bilibili-subtitle 提取 → TXT |
+| `https://` 或 `http://` | 网页 | 直接传递给 NotebookLM |
+| `/path/to/file.pdf` | PDF 文件 | markitdown 转 Markdown → TXT |
+| `/path/to/file.epub` | EPUB 电子书 | markitdown 转 Markdown → TXT |
+| `/path/to/file.docx` | Word 文档 | markitdown 转 Markdown → TXT |
+| `/path/to/file.pptx` | PowerPoint | markitdown 转 Markdown → TXT |
+| `/path/to/file.xlsx` | Excel | markitdown 转 Markdown → TXT |
+| `/path/to/file.md` | Markdown | 直接上传 |
+| `/path/to/image.jpg` | 图片（OCR） | markitdown OCR → TXT |
+| `/path/to/audio.mp3` | 音频 | markitdown 转录 → TXT |
+| `/path/to/file.zip` | ZIP 压缩包 | 解压 → markitdown 批量转换 |
+| 关键词（无URL，无路径） | 搜索查询 | WebSearch → 汇总 → TXT |
+
+### Step 2: 获取内容
+
+**微信公众号**：
+- 使用 MCP 工具 `read_weixin_article`
+- 返回：title, author, publish_time, content
+- 保存为 TXT：`/tmp/weixin_{title}_{timestamp}.txt`
+
+**网页/YouTube**：
+- 保留原始 URL 作为 source 输入
+- NotebookLM 自动提取内容
+
+**Bilibili 视频**：
+- 使用 bilibili-subtitle 提取字幕/转录
+- 命令：`python -m bilibili_subtitle "URL" -o /tmp --skip-summary`
+- 保存为 TXT：`/tmp/{video_id}.transcript.md`
+
+**Office 文档/电子书/PDF**：
+- 使用 markitdown 转换为 Markdown
+- 命令：`markitdown /path/to/file.docx -o /tmp/converted.md`
+- 保存为 TXT：`/tmp/{filename}_converted_{timestamp}.txt`
+
+**本地 Markdown**：
+- 作为本地文件 source 交给委托层上传
+
+**图片（OCR）**：
+- markitdown 自动 OCR 识别文字
+- 提取 EXIF 元数据
+- 保存为 TXT
+
+**音频文件**：
+- markitdown 自动转录语音为文字
+- 提取音频元数据
+- 保存为 TXT
+
+**ZIP 压缩包**：
+- 自动解压到临时目录
+- 遍历所有支持的文件
+- 批量使用 markitdown 转换
+- 合并为单个 TXT 或多个 Source
+
+**搜索关键词**：
+- 使用 WebSearch 工具搜索关键词
+- 汇总前 3-5 条结果
+- 保存为 TXT：`/tmp/search_{keyword}_{timestamp}.txt`
+
+### Step 3: 上传到 NotebookLM
+
+委托 `notebooklm` Skill 执行：
+1. 创建 notebook（返回 notebook_id）
+2. 添加 source（文件或 URL）
+3. 等待 source 进入 READY 状态
+4. 将 notebook_id/source_id 回传给本 Skill 的后续步骤
+
+**等待 source READY 很重要**，否则后续生成可能失败。
+
+### Step 5: 根据意图生成内容（可选）
+
+如果用户指定了处理意图，自动委托 `notebooklm` Skill：
+
+| 意图 | 委托动作 | 产物类型 |
+|------|---------|---------|
+| audio | generate-audio | mp3 |
+| slide-deck | generate-slide-deck | pdf |
+| mind-map | generate-mind-map | json |
+| quiz | generate-quiz | markdown/json/html |
+| video | generate-video | mp4 |
+| report | generate-report | md |
+| infographic | generate-infographic | png |
+| flashcards | generate-flashcards | markdown/json/html |
+
+**生成流程**：
+1. 委托发起生成（返回任务/产物 ID）
+2. 委托等待完成
+3. 委托下载到本地
+4. 告知用户最终文件路径与大小
+
+## 完整示例
+
+### 示例 1：微信公众号文章 → 播客
+
+**用户输入**：
+```
+把这篇文章生成播客 https://mp.weixin.qq.com/s/abc123xyz
+```
+
+**执行流程**：
+1. 识别为微信公众号链接
+2. MCP 工具抓取文章内容
+3. 创建 TXT 文件
+4. 上传到 NotebookLM
+5. 生成播客（`generate audio`）
+6. 下载播客到本地
+
+**输出**：
+```
+✅ 微信文章已转换为播客！
+
+📄 文章：深度学习的未来趋势
+👤 作者：张三
+📅 发布：2026-01-20
+
+🎙️ 播客已生成：
+📁 文件：/tmp/weixin_深度学习的未来趋势_podcast.mp3
+⏱️ 时长：约 8 分钟
+📊 大小：12.3 MB
+```
+
+### 示例 2：YouTube 视频 → 思维导图
+
+**用户输入**：
+```
+这个视频帮我画个思维导图 https://www.youtube.com/watch?v=abc123
+```
+
+**执行流程**：
+1. 识别为 YouTube 链接
+2. 直接传递给 NotebookLM（自动提取字幕）
+3. 生成思维导图（`generate mind-map`）
+4. 下载思维导图
+
+**输出**：
+```
+✅ YouTube 视频已转换为思维导图！
+
+🎬 视频：Understanding Quantum Computing
+⏱️ 时长：23 分钟
+
+🗺️ 思维导图已生成：
+📁 文件：/tmp/youtube_quantum_computing_mindmap.json
+📊 节点数：45 个
+```
+
+### 示例 3：搜索关键词 → 报告
+
+**用户输入**：
+```
+搜索 'AI发展趋势 2026' 并生成报告
+```
+
+**执行流程**：
+1. 识别为搜索查询
+2. WebSearch 搜索关键词
+3. 汇总前 5 条结果
+4. 创建 TXT 文件
+5. 上传到 NotebookLM
+6. 生成报告（`generate report`）
+
+**输出**：
+```
+✅ 搜索结果已生成报告！
+
+🔍 关键词：AI发展趋势 2026
+📊 来源：5 篇文章
+
+📄 报告已生成：
+📁 文件：/tmp/search_AI发展趋势2026_report.md
+📝 章节：7 个
+📊 大小：15.2 KB
+```
+
+### 示例 4：混合多源 → PPT
+
+**用户输入**：
+```
+把这篇文章、这个视频和这个PDF一起做成PPT：
+- https://example.com/article
+- https://youtube.com/watch?v=xyz
+- /Users/joe/Documents/research.pdf
+```
+
+**执行流程**：
+1. 创建新 Notebook
+2. 依次添加 3 个 Source
+3. 基于所有 Source 生成 PPT
+
+**输出**：
+```
+✅ 多源内容已整合为PPT！
+
+📚 内容源：
+  1. 网页文章：AI in 2026
+  2. YouTube：Future of AI
+  3. PDF：Research Notes (12 页)
+
+📊 PPT 已生成：
+📁 文件：/tmp/multi_source_slides.pdf
+📄 页数：25 页
+📦 大小：3.8 MB
+```
+
+### 示例 5: EPUB 电子书 → 播客
+
+**用户输入**：
+```
+把这本电子书做成播客 /Users/joe/Books/sapiens.epub
+```
+
+**执行流程**：
+1. 识别为 EPUB 文件
+2. markitdown 转换为 Markdown
+3. 保存为 TXT
+4. 上传到 NotebookLM
+5. 生成播客
+
+**输出**：
+```
+✅ EPUB 电子书已转换为播客！
+
+📚 电子书：Sapiens: A Brief History of Humankind
+📄 页数：约 450 页
+📊 字数：约 15 万字
+
+🎙️ 播客已生成：
+📁 文件：/tmp/sapiens_podcast.mp3
+⏱️ 时长：约 45 分钟（精华版）
+📊 大小：48.2 MB
+```
+
+### 示例 6：Word 文档 → Quiz
+
+**用户输入**：
+```
+这个Markdown生成Quiz /Users/joe/notes/machine_learning.md
+```
+
+**执行流程**：
+1. 识别为本地 Markdown 文件
+2. 直接上传到 NotebookLM
+3. 生成 Quiz（`generate quiz`）
+
+**输出**：
+```
+✅ Markdown 已转换为Quiz！
+
+📄 文件：machine_learning.md
+📊 大小：8.5 KB
+
+📝 Quiz 已生成：
+📁 文件：/tmp/machine_learning_quiz.md
+❓ 题目：15 道（10选择 + 5简答）
+```
+
+## 错误处理
+
+### 1. 微信文章获取失败
+- **错误**：无法获取文章内容
+- **原因**：文章已删除、需要登录、网络问题、反爬虫拦截
+- **解决**：检查链接是否正确，等待 2-3 秒后重试
+- **备选**：手动复制文章内容
+
+### 2. NotebookLM 认证失败
+- **错误**：Auth/cookie error
+- **原因**：认证过期或未登录
+- **解决**：切换到 `notebooklm` Skill 执行认证修复流程（auth check/login）
+- **验证**：由 `notebooklm` Skill 返回认证状态
+
+### 3. 文件上传失败
+- **错误**：Invalid file or upload error
+- **原因**：文件路径错误、权限问题、文件过大
+- **解决**：本 Skill 先检查路径/权限/转换结果，再委托 `notebooklm` Skill 重试上传
+- **备选**：尝试转换为更小的文件
+
+### 4. 生成任务失败
+- **错误**：Generation failed
+- **原因**：内容太短（<100字）、太长（>50万字）、服务异常
+- **解决**：由 `notebooklm` Skill 执行任务状态诊断与重试
+- **备选**：尝试其他格式（如报告代替播客）
+
+### 5. MCP 工具未找到
+- **错误**：Tool not found: read_weixin_article
+- **原因**：MCP 服务器未配置或未启动
+- **解决**：检查 `~/.claude/config.json` 配置，重启 Claude Code
+- **验证**：`python ~/.agents/skills/anything-to-notebooklm/wexin-read-mcp/src/server.py`
+
+## 高级功能
+
+### 1. 多意图处理
+
+用户可以一次性指定多个处理任务：
+
+```
+这篇文章帮我生成播客和PPT https://mp.weixin.qq.com/s/abc123
+```
+
+Skill 会依次执行：
+1. 生成播客
+2. 生成 PPT
+
+### 2. 自定义 Notebook
+
+默认每篇文章创建新 Notebook，也可以指定已有 Notebook：
+
+```
+把这篇文章加到我的【AI研究】笔记本 https://mp.weixin.qq.com/s/abc123
+```
+
+Skill 会：
+1. 搜索名为"AI研究"的 Notebook
+2. 将文章添加为新 Source
+3. 基于所有 Sources 生成内容
+
+### 3. 自定义生成指令
+
+为生成任务添加具体要求：
+
+```
+这篇文章生成播客，要求：轻松幽默的风格，时长控制在5分钟
+```
+
+Skill 会将要求作为 instructions 传给 NotebookLM。
+
+## 注意事项
+
+1. **频率限制**：
+   - 每次请求间隔 > 2 秒，避免被微信封禁
+   - NotebookLM 生成任务有并发限制（最多 3 个同时进行）
+
+2. **内容长度**：
+   - 微信文章通常 1000-5000 字，适合生成播客（3-8 分钟）
+   - 超过 10000 字的长文可能需要更长生成时间
+   - 少于 500 字的短文可能生成效果不佳
+
+3. **版权遵守**：
+   - 仅用于个人学习研究
+   - 遵守微信公众号的版权规定
+   - 生成的内容不得用于商业用途
+
+4. **生成时间**：
+   - 播客：2-5 分钟
+   - 视频：3-8 分钟
+   - PPT：1-3 分钟
+   - 思维导图：1-2 分钟
+   - Quiz/闪卡：1-2 分钟
+
+5. **文件清理**：
+   - TXT 源文件保存在 `/tmp/`，系统重启后自动清理
+   - 生成的文件（MP3/PDF/MD 等）默认保存在 `/tmp/`
+   - 可以指定自定义保存路径
+
+## 相关 Skills
+
+- `notebooklm` - NotebookLM 执行层（高级用户可直接使用）
+- `notebooklm-deep-analyzer` - 深度分析 NotebookLM 内容
+- `markitdown` - 转换其他格式文档
+
+**默认策略**：
+- 对外默认使用 `anything-to-notebooklm`（统一入口）
+- 高级场景直用 `notebooklm`（精细控制）
+
+## 配置 MCP（重要）
+
+⚠️ **第一次使用前必须配置**
+
+编辑 `~/.claude/config.json`：
+
+```json
+{
+  "primaryApiKey": "any",
+  "mcpServers": {
+    "weixin-reader": {
+      "command": "python",
+      "args": [
+        "/Users/joe/.claude/skills/anything-to-notebooklm/wexin-read-mcp/src/server.py"
+      ]
+    }
+  }
+}
+```
+
+**配置后重启 Claude Code！**
+
+## 故障排查
+
+```bash
+# 测试 MCP 服务器
+python ~/.agents/skills/anything-to-notebooklm/wexin-read-mcp/src/server.py
+```
+
+NotebookLM 侧故障（认证、上传、生成、下载）统一委托 `notebooklm` Skill 处理，不在本 Skill 维护完整 CLI 排查手册。
+
+## 典型使用场景
+
+### 场景 1：快速学习
+
+```
+我想学习这篇文章，帮我生成播客，上下班路上听
+链接：https://mp.weixin.qq.com/s/abc123
+```
+
+→ 生成 8 分钟播客，通勤时间听完
+
+### 场景 2：分享给团队
+
+```
+这篇文章不错，做成PPT分享给团队
+https://mp.weixin.qq.com/s/abc123
+```
+
+→ 生成 15 页 PPT，直接用于团队分享
+
+### 场景 3：复习巩固
+
+```
+这篇技术文章帮我出题，想测试一下掌握程度
+https://mp.weixin.qq.com/s/abc123
+```
+
+→ 生成 10 道选择题 + 5 道简答题
+
+### 场景 4：可视化理解
+
+```
+这篇文章概念比较多，画个思维导图帮我理清结构
+https://mp.weixin.qq.com/s/abc123
+```
+
+→ 生成思维导图，一目了然
+
+### 示例 7：Bilibili 视频 → 播客
+
+**用户输入**：
+```
+把这个B站视频做成播客 https://www.bilibili.com/video/BV1234567890/
+```
+
+**执行流程**：
+1. 识别为 Bilibili 链接
+2. bilibili-subtitle 提取字幕/转录
+3. 保存为 TXT
+4. 上传到 NotebookLM
+5. 生成播客
+
+**输出**：
+```
+✅ B站视频已转换为播客！
+
+🎬 视频：深度学习入门教程
+⏱️ 时长：45 分钟
+
+🎙️ 播客已生成：
+📁 文件：/tmp/bilibili_BV1234567890_podcast.mp3
+⏱️ 时长：约 12 分钟
+📊 大小：18.5 MB
+```
+
+---
+
+**Skill 创建时间**：2026-01-25
+**最后更新**：2026-02-25
+**版本**：v1.2.0
