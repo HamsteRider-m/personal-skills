@@ -86,12 +86,12 @@
 
 ## Migration Queue (待迁移)
 
-### ultimate-search
-- **Target Path**: `skills/content/ultimate-search/`
-- **Status**: `migration-pending`
-- **Source**: Fork from ckckck/UltimateSearchSkill
-- **Notes**: 有 3 个有价值的增强 commits，需保留并监控上游
-- **Phase**: Phase 4
+### ~~ultimate-search~~ ✅ 已完成
+- **Path**: `skills/content/ultimate-search/`
+- **Status**: `stable`
+- **Source**: Migrated from ~/.openclaw/skills/
+- **Notes**: 保留 3 个增强 commits（agent-browser 集成、X/Twitter 路由、Tavily key 健壮性）
+- **Phase**: Phase 4 完成
 
 ### obsidian-assistant
 - **Path**: `skills/productivity/obsidian-assistant/`
