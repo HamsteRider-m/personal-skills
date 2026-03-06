@@ -57,40 +57,30 @@
 
 ## Planned Skills (待创建)
 
-### content-bridge
-- **Target Path**: `skills/content/content-bridge/`
-- **Status**: `planned`
-- **Role**: 通用内容摄取路由层
-- **Source**: 改名自 anything-to-notebooklm
-- **Phase**: Phase 1
+### ~~content-bridge~~ ✅ 已完成
+- **Path**: `skills/content/content-bridge/`
+- **Status**: `stable`
+- **Phase**: Phase 1 完成
 
-### weixin-extractor
-- **Target Path**: `skills/content/weixin-extractor/`
-- **Status**: `planned`
-- **Role**: 微信文章提取
-- **Source**: 从 anything-to-notebooklm 拆分
-- **Phase**: Phase 2
+### ~~weixin-extractor~~ ✅ 已完成
+- **Path**: `skills/content/weixin-extractor/`
+- **Status**: `active`
+- **Phase**: Phase 2 完成
 
-### youtube-transcript
-- **Target Path**: `skills/content/youtube-transcript/`
-- **Status**: `planned`
-- **Role**: YouTube 视频转录
-- **Source**: 从 anything-to-notebooklm 拆分
-- **Phase**: Phase 2
+### ~~youtube-transcript~~ ✅ 已完成
+- **Path**: `skills/content/youtube-transcript/`
+- **Status**: `active`
+- **Phase**: Phase 2 完成
 
-### web-reader
-- **Target Path**: `skills/content/web-reader/`
-- **Status**: `planned`
-- **Role**: 通用网页内容提取
-- **Source**: 整合 jina-reader
-- **Phase**: Phase 2
+### ~~web-reader~~ ✅ 已完成
+- **Path**: `skills/content/web-reader/`
+- **Status**: `active`
+- **Phase**: Phase 2 完成
 
-### document-parser
-- **Target Path**: `skills/content/document-parser/`
-- **Status**: `planned`
-- **Role**: PDF/DOCX 文档解析
-- **Source**: 从 anything-to-notebooklm 拆分
-- **Phase**: Phase 2
+### ~~document-parser~~ ✅ 已完成
+- **Path**: `skills/content/document-parser/`
+- **Status**: `active`
+- **Phase**: Phase 2 完成
 
 ---
 
