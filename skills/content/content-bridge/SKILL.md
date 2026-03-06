@@ -1,32 +1,46 @@
 ---
-name: anything-to-notebooklm
-description: 多源内容到NotebookLM处理器。当用户提供微信公众号链接(mp.weixin.qq.com)、YouTube链接、网页URL、本地文件路径(PDF/EPUB/DOCX/PPTX/MD等)或搜索关键词，并希望上传到NotebookLM或生成播客/PPT/思维导图等内容时触发。
+name: content-bridge
+description: 通用内容摄取路由层。自动识别内容源类型（微信、YouTube、网页、文档等），调用对应的摄取 skill，返回标准化 Markdown 内容。可被任何需要内容摄取的 skill 复用，不绑定特定下游应用。
 user-invocable: true
-homepage: https://github.com/joeseesun/anything-to-notebooklm
+homepage: https://github.com/HamsteRider-m/personal-skills
 ---
 
-# 多源内容 → NotebookLM 智能处理器
+# Content Bridge - 通用内容摄取路由层
 
 自动从多种来源获取内容，上传到 NotebookLM，并根据自然语言指令生成播客、PPT、思维导图等多种格式。
 
-## 定位与入口策略（重要）
+## 定位与职责
 
-- 默认入口：对外优先使用 `anything-to-notebooklm`，适合“给素材/链接/关键词，直接产出内容”的自然语言请求。
-- 边界分工：本 Skill 负责内容采集、转换、清洗、意图路由；NotebookLM 侧的创建/上传/生成/等待/下载全部委托给 `notebooklm` Skill。
-- 高级直连：当用户明确要求 CLI 细节、JSON 输出、并行控制、research/fulltext/language 等高级能力时，直接切换到 `notebooklm` Skill。
-- 维护原则：本 Skill 不重复维护 NotebookLM 的完整命令教学，避免与上游 `notebooklm` Skill 漂移。
+**Content Bridge 是通用内容摄取基础设施，不绑定任何下游应用。**
 
-## Quick Reference
+- **核心职责**：识别内容源类型 → 路由到对应摄取 skill → 返回标准化内容
+- **复用性**：任何 skill（deep-learning、knowledge-sync、research 等）都可依赖
+- **不负责**：不直接实现具体平台的抓取逻辑，不处理下游应用逻辑（如 NotebookLM 上传）
+- **边界清晰**：专注于"内容获取"这一层，下游如何使用由调用方决定
 
-| 任务 | 执行方式 |
-|------|----------|
-| 抓取微信文章 | 本 Skill 调用 MCP `read_weixin_article` |
-| 提取 B 站字幕 | 本 Skill 调用 `bilibili-subtitle` |
-| 转换文档/OCR/转录 | 本 Skill 调用 `markitdown` |
-| 创建 notebook / 上传 source | 委托 `notebooklm` Skill |
-| 生成 audio/video/slide/report/mind-map 等 | 委托 `notebooklm` Skill |
-| 等待任务与下载产物 | 委托 `notebooklm` Skill |
-| JSON/并行/research/fulltext/language | 直接使用 `notebooklm` Skill（高级模式） |
+## 架构说明
+
+Content Bridge 是**路由层**，不是实现层：
+
+```
+调用方 (deep-learning, etc.)
+    ↓
+content-bridge (路由判断)
+    ↓
+独立摄取 skills (weixin-extractor, bilibili-subtitle, etc.)
+    ↓
+标准化输出 (Markdown + metadata)
+```
+
+## 依赖的摄取 Skills
+
+| 内容源 | 摄取 Skill | 状态 |
+|--------|-----------|------|
+| 微信公众号 | `weixin-extractor` | 计划中 (Phase 2) |
+| B站视频 | `bilibili-subtitle` | ✅ 已存在 |
+| YouTube | `youtube-transcript` | 计划中 (Phase 2) |
+| 通用网页 | `web-reader` | 计划中 (Phase 2) |
+| PDF/DOCX | `document-parser` | 计划中 (Phase 2) |
 
 ## 支持的内容源
 
@@ -195,7 +209,7 @@ MCP 服务器已安装在：`~/.claude/skills/anything-to-notebooklm/wexin-read-
    ID: source-xyz-789
 
 💡 后续操作：
-   - 默认继续使用本 Skill：直接说“基于这个 notebook 生成播客/PPT/Quiz”
+   - 默认继续使用本 Skill：直接说"基于这个 notebook 生成播客/PPT/Quiz"
    - 高级模式：切换 `notebooklm` Skill，对该 notebook 进行精细控制
 ```
 
