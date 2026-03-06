@@ -25,28 +25,41 @@ Automated deep learning workflow using NotebookLM as the core engine. Handles ma
 4. Generate all artifacts in parallel (report, podcast, slides, video, quiz, flashcards)
 5. Download and send to user via Feishu + save to Obsidian
 
-## 🔥 Enhanced Trigger System
+## 🏗️ Architecture
 
-### Explicit Triggers (Direct Commands)
+**deep-learning 是 orchestrator，不是 all-in-one：**
+
+```
+deep-learning (orchestrator)
+    ↓
+content-bridge (内容摄取统一入口)
+    ↓
+独立摄取 skills (weixin/bilibili/youtube/web/document)
+    ↓
+NotebookLM (知识合成引擎)
+    ↓
+多格式产物 (report/podcast/slides/quiz)
+```
+
+## 📦 Dependencies
+
+- `content-bridge`: 内容摄取路由层
+- `bilibili-subtitle`: B站字幕提取（通过 content-bridge 调用）
+- `notebooklm-py`: NotebookLM CLI
+- `ultimate-search`: 网络搜索（可选）
+
+## 🔥 Trigger System
+
+### Explicit Triggers
 - "帮我学习 X", "深入了解 X", "研究一下 X"
 - "深度学习 X", "全面了解 X", "系统学习 X"
-- "生成报告", "做成 PPT", "生成播客", "制作视频"
 
-### Implicit Triggers (Context-Aware)
-- "总结一下", "提取要点", "整理成笔记"
-- "听不懂", "解释一下", "什么意思", "这是什么"
-- "教程", "入门", "指南", "手册", "攻略"
-- "对比", "vs", "有什么区别", "哪个更好"
-- "怎么做", "如何", "步骤", "流程", "方法"
-- "太长不看", "TL;DR", "简单说"
+### Implicit Triggers
+- "总结一下", "听不懂", "解释一下"
+- "教程", "入门", "指南"
+- User shares long article/URL then asks questions
 
-### Contextual Triggers (Smart Detection)
-- User shares a long article/URL then asks questions
-- User mentions learning a new technology/concept
-- User asks "what is X" or "how to understand X"
-- User expresses confusion about a complex topic
-
-**When detected:** Proactively ask "是否需要我帮你深度学习这个主题？我可以生成报告、播客、PPT、测试题等完整学习包。"
+**When detected:** Ask "是否需要深度学习？我可以生成报告、播客、PPT、测试题等。"
 
 ## 📦 Material Collection
 
