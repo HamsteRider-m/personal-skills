@@ -1,0 +1,26 @@
+{
+  "name": "browser-plus",
+  "version": "1.0.0",
+  "description": "Intelligent browser automation with smart routing between OpenClaw native browser and Vercel agent-browser",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "browser",
+    "automation",
+    "openclaw",
+    "agent-browser",
+    "twitter",
+    "playwright"
+  ],
+  "author": "OpenClaw",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {},
+  "peerDependencies": {
+    "openclaw": ">=0.1.0"
+  }
+}

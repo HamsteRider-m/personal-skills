@@ -1,0 +1,50 @@
+2026/03/05-13:58:14.059 441122 Creating DB /Users/maygo/.openclaw/workspace/skills/feishu-work-archive/browser-data/Default/Local Storage/leveldb since it was missing.
+2026/03/05-13:58:14.062 441122 Reusing MANIFEST /Users/maygo/.openclaw/workspace/skills/feishu-work-archive/browser-data/Default/Local Storage/leveldb/MANIFEST-000001
+2026/03/05-14:00:26.327 441b46 Level-0 table #5: started
+2026/03/05-14:00:26.332 441b46 Level-0 table #5: 18390 bytes OK
+2026/03/05-14:00:26.335 441b46 Delete type=0 #3
+2026/03/05-14:02:15.441 441125 Level-0 table #7: started
+2026/03/05-14:02:15.443 441125 Level-0 table #7: 14678 bytes OK
+2026/03/05-14:02:15.445 441125 Delete type=0 #4
+2026/03/05-14:02:26.326 441b46 Level-0 table #9: started
+2026/03/05-14:02:26.330 441b46 Level-0 table #9: 265416 bytes OK
+2026/03/05-14:02:26.332 441b46 Delete type=0 #6
+2026/03/05-14:04:26.329 441125 Level-0 table #11: started
+2026/03/05-14:04:26.331 441125 Level-0 table #11: 18234 bytes OK
+2026/03/05-14:04:26.334 441125 Delete type=0 #8
+2026/03/05-14:06:26.328 441125 Level-0 table #13: started
+2026/03/05-14:06:26.330 441125 Level-0 table #13: 14821 bytes OK
+2026/03/05-14:06:26.334 441125 Delete type=0 #10
+2026/03/05-14:07:33.096 441125 Level-0 table #15: started
+2026/03/05-14:07:33.098 441125 Level-0 table #15: 14826 bytes OK
+2026/03/05-14:07:33.099 441125 Delete type=0 #12
+2026/03/05-14:07:33.100 441125 Compacting 4@0 + 1@1 files
+2026/03/05-14:07:33.103 441125 Generated table #16@0: 53 keys, 268620 bytes
+2026/03/05-14:07:33.103 441125 Compacted 4@0 + 1@1 files => 268620 bytes
+2026/03/05-14:07:33.104 441125 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/03/05-14:07:33.104 441125 Delete type=2 #15
+2026/03/05-14:07:33.104 441125 Delete type=2 #7
+2026/03/05-14:07:33.104 441125 Delete type=2 #13
+2026/03/05-14:07:33.104 441125 Delete type=2 #11
+2026/03/05-14:07:33.104 441125 Delete type=2 #9
+2026/03/05-14:08:26.327 441122 Level-0 table #18: started
+2026/03/05-14:08:26.329 441122 Level-0 table #18: 42930 bytes OK
+2026/03/05-14:08:26.331 441122 Delete type=0 #14
+2026/03/05-14:10:26.328 441125 Level-0 table #20: started
+2026/03/05-14:10:26.330 441125 Level-0 table #20: 14817 bytes OK
+2026/03/05-14:10:26.332 441125 Delete type=0 #17
+2026/03/05-14:12:26.329 441125 Level-0 table #22: started
+2026/03/05-14:12:26.331 441125 Level-0 table #22: 14820 bytes OK
+2026/03/05-14:12:26.333 441125 Delete type=0 #19
+2026/03/05-14:13:02.550 441125 Level-0 table #24: started
+2026/03/05-14:13:02.552 441125 Level-0 table #24: 16794 bytes OK
+2026/03/05-14:13:02.557 441125 Delete type=0 #21
+2026/03/05-14:13:02.557 441125 Compacting 4@0 + 1@1 files
+2026/03/05-14:13:02.564 441125 Generated table #25@0: 59 keys, 269208 bytes
+2026/03/05-14:13:02.564 441125 Compacted 4@0 + 1@1 files => 269208 bytes
+2026/03/05-14:13:02.565 441125 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/03/05-14:13:02.565 441125 Delete type=2 #16
+2026/03/05-14:13:02.565 441125 Delete type=2 #20
+2026/03/05-14:13:02.565 441125 Delete type=2 #22
+2026/03/05-14:13:02.565 441125 Delete type=2 #18
+2026/03/05-14:13:02.566 441125 Delete type=2 #24

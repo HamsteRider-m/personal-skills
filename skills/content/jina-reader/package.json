@@ -1,0 +1,17 @@
+{
+  "name": "jina-reader",
+  "version": "1.0.0",
+  "description": "Extract clean text from any webpage using r.jina.ai",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "web-scraping",
+    "content-extraction",
+    "jina-ai",
+    "markdown"
+  ],
+  "author": "",
+  "license": "MIT"
+}
