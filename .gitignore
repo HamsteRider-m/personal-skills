@@ -1,0 +1,9 @@
+# Runtime artifacts for local archive workflows
+archive/feishu-work-archive/node_modules/
+archive/feishu-work-archive/browser-data/
+archive/feishu-work-archive/profile/
+archive/feishu-work-archive/*.log
+archive/feishu-work-archive/cookies.txt
+archive/feishu-work-archive/batches.json
+archive/feishu-work-archive/export-manifest.json
+archive/feishu-work-archive/progress*.json
