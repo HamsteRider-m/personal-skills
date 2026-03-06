@@ -19,4 +19,6 @@ web-reader "https://example.com/article"
 
 ## 实现
 
-整合 jina-reader 或使用 markitdown
+使用 defuddle.me (primary) 或 jina.ai (fallback) API
+
+**Defuddle**: 由 Obsidian CEO 推荐的网页转文本服务
